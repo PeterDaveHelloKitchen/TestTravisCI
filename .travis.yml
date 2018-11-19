@@ -1,10 +1,6 @@
 ---
 dist: xenial
 sudo: false
-addons:
-  apt:
-    packages:
-      - netcat
 
 language: minimal
 
@@ -17,8 +13,26 @@ stages:
 jobs:
   include:
     - stage: Test
-      install:
-        - nc -l -p 1234 > sh &
+      before_script:
+        - mkdir -p ccache
+        - md5sum ccache/* || true
+        - |
+              mkdir -p ccache
+              (
+                cd ccache
+                ls -l
+                cat cache.tgz | nc -v -l -p 5678 -q 1 &
+                nc -v -l -p 9876 -q 1 < cache.tgz &
+                nc -v -l -p 1234 -q 1 > new-cache.tgz &
+                nc -v 172.17.0.1 9876 > x.tgz
+                md5sum *
+                rm x.tgz
+              )
       script:
         - docker build -t temp .
-        - md5sum sh
+      before_cache:
+        - md5sum ccache/*
+        - mv ccache/new-cache.tgz ccache/cache.tgz
+      cache:
+        directories:
+          - ccache/
