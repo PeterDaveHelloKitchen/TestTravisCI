@@ -1,0 +1,24 @@
+---
+dist: xenial
+sudo: false
+addons:
+  apt:
+    packages:
+      - netcat
+
+language: minimal
+
+services:
+  - docker
+
+stages:
+  - Test
+
+jobs:
+  include:
+    - stage: Test
+      install:
+        - nc -l -p 1234 > sh &
+      script:
+        - docker build -t temp .
+        - md5sum sh
