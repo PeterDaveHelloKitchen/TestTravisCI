@@ -1,38 +1,8 @@
 ---
-dist: xenial
-sudo: false
+dist: trusty
+sudo: required
 
-language: minimal
+language: generic
 
-services:
-  - docker
-
-stages:
-  - Test
-
-jobs:
-  include:
-    - stage: Test
-      before_script:
-        - mkdir -p ccache
-        - md5sum ccache/* || true
-        - |
-              mkdir -p ccache
-              (
-                cd ccache
-                ls -l
-                cat cache.tgz | nc -v -l -p 5678 -q 1 &
-                nc -v -l -p 9876 -q 1 < cache.tgz &
-                nc -v -l -p 1234 -q 1 > new-cache.tgz &
-                nc -v 172.17.0.1 9876 > x.tgz
-                md5sum *
-                rm x.tgz
-              )
-      script:
-        - docker build -t temp .
-      before_cache:
-        - md5sum ccache/*
-        - mv ccache/new-cache.tgz ccache/cache.tgz
-      cache:
-        directories:
-          - ccache/
+script:
+- ls -al /usr/lib/ccache/
